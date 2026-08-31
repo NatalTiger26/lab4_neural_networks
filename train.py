@@ -61,7 +61,8 @@ def training(
     checkpoint_path="models",
     device="cpu",
     start_epoch=0,
-    history=None
+    history=None,
+    metrics=['loss']
 ):
     """
     Train a model and optionally save full training checkpoints.
@@ -176,9 +177,10 @@ def training(
 
         train_loss /= train_total
         train_acc = train_correct / train_total
-
-        history["train_loss"].append(train_loss)
-        history["train_acc"].append(train_acc)
+        if 'loss' in metrics:
+            history["train_loss"].append(train_loss)
+        if 'acc' in metrics:
+            history["train_acc"].append(train_acc)
 
         # =========================
         # Validation
@@ -218,20 +220,36 @@ def training(
         val_loss /= val_total
         val_acc = val_correct / val_total
 
-        history["val_loss"].append(val_loss)
-        history["val_acc"].append(val_acc)
+        if 'loss' in metrics:
+            history["val_loss"].append(val_loss)
+        if 'acc' in metrics:
+            history["val_acc"].append(val_acc)
 
         # =========================
         # Progress bar
         # =========================
 
-        pbar.set_postfix(
-            epoch=epoch + 1,
-            train_loss=f"{train_loss:.4f}",
-            train_acc=f"{train_acc:.3f}",
-            val_loss=f"{val_loss:.4f}",
-            val_acc=f"{val_acc:.3f}"
-        )
+        if 'acc' in metrics and 'loss' in metrics:
+            pbar.set_postfix(
+                epoch=epoch + 1,
+                train_loss=f"{train_loss:.4f}",
+                train_acc=f"{train_acc:.3f}",
+                val_loss=f"{val_loss:.4f}",
+                val_acc=f"{val_acc:.3f}"
+            )
+        elif 'acc' in metrics and 'loss' not in metrics:
+            pbar.set_postfix(
+                epoch=epoch + 1,
+                train_acc=f"{train_acc:.3f}",
+                val_acc=f"{val_acc:.3f}"
+            )
+        elif 'acc' not in metrics and 'loss' in metrics:
+            pbar.set_postfix(
+                epoch=epoch + 1,
+                train_loss=f"{train_loss:.4f}",
+                val_loss=f"{val_loss:.4f}"
+            )
+
 
         # =========================
         # Checkpoint
@@ -260,4 +278,4 @@ def training(
                 checkpoint_path / "checkpoint.pt"
             )
 
-    return history
+    return model, history
