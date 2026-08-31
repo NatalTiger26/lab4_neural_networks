@@ -134,13 +134,45 @@ def main(x_train, y_train, x_test, y_test, epoch = 10):
             loss_fn = loss_fn,
             device=device,
         )
+    model.eval()
 
-    print('the test loss is - ', loss_fn(model(x_test.to(device)), y_test.to(device)).item())
+    with torch.no_grad():
+        print('the test loss is - ', loss_fn(model(x_test.to(device)), y_test.to(device)).item())
 
     return model, history
 
     
 
 
-# def gradient_descent_numpy(X, y, lr=0.01, steps=200):
-#     pass
+def gradient_descent_numpy(X_train, y_train, lr=0.01, steps=200):
+    
+    w = np.zeros((X_train.shape[1], 1))
+    b = 0.0
+
+    lr = 0.01
+    epochs = steps
+
+    train_losses = []
+
+    for epoch in range(epochs):
+
+        # Forward pass
+        y_pred = X_train @ w + b
+
+        # Error
+        error = y_pred - y_train
+
+        # MSE
+        loss = np.mean(error ** 2)
+
+        # Manually calculate gradients
+        grad_w = (2 / len(X_train)) * X_train.T @ error
+        grad_b = (2 / len(X_train)) * np.sum(error)
+
+        # Gradient descent update
+        w = w - lr * grad_w
+        b = b - lr * grad_b
+
+        train_losses.append(loss)
+
+    return w, b, train_losses
